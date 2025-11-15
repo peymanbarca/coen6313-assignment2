@@ -23,7 +23,7 @@ services:
     environment:
       - USER_V1_URL=http://user_service_v1:8001
       - USER_V2_URL=http://user_service_v2:8002
-      - STRANGLER_P=0.7
+      - STRANGLER_PROB=0.7
     depends_on:
       - user_service_v1
       - user_service_v2
