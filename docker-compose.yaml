@@ -1,0 +1,65 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_asgn2_data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672" # management UI
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - USER_V1_URL=http://user_service_v1:8001
+      - USER_V2_URL=http://user_service_v2:8002
+      - STRANGLER_P=0.7
+    depends_on:
+      - user_service_v1
+      - user_service_v2
+
+  user_service_v1:
+    build: ./user_service_v1
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  user_service_v2:
+    build: ./user_service_v2
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    ports:
+      - "8002:8002"
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  order_service:
+    build: ./order_service
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    ports:
+      - "8003:8003"
+    depends_on:
+      - mongo
+      - rabbitmq
+
+volumes:
+  mongo_asgn2_data:
